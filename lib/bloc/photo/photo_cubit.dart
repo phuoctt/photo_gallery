@@ -9,44 +9,110 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../models/photo.dart';
 import '../../share/constant.dart';
+import '../../share/enums/photo_type.dart';
+import '../../share/utility.dart';
 
 class PhotoCubit extends Cubit<PhotoState> {
-  PhotoCubit() : super(const PhotoLoading());
+  final String? key;
+  late Box<dynamic> box;
+
+  PhotoCubit({this.key}) : super(const PhotoLoading());
 
   Future<void> onLoadPhotos() async {
-    emit(const PhotoLoading());
-    var box = await Hive.openBox(HiveKey.boxKey);
-    Map<dynamic, dynamic> photoLocal = box.toMap();
-    Map<int, PhotoModel> maps = {};
-    for (var element in photoLocal.entries) {
-      maps[element.key] = element.value as PhotoModel;
+    try {
+      box = await Hive.openBox(key ?? HiveKey.boxKey);
+      emit(const PhotoLoading());
+      emit(PhotoLogged(data: _getPhotoStorage()));
+    } catch (err) {
+      emit(PhotoError(err.toString()));
     }
-    emit(PhotoLogged(data: maps));
   }
 
   Future<void> addPhoto(List<XFile> files) async {
-    var box = await Hive.openBox(HiveKey.boxKey);
-    files.map((e) async {
+    try {
+      await _addAndMoveFile(files);
+      emit(PhotoLogged(data: _getPhotoStorage()));
+    } catch (err) {
+      emit(PhotoError(err.toString()));
+    }
+  }
+
+  Future<void> onDelete(int index, PhotoModel data) async {
+    try {
+      box.deleteAt(index);
+      emit(PhotoLogged(data: _getPhotoStorage()));
+      switch (PhotoType.fromType(data.type)) {
+        case PhotoType.file:
+          File(data.path ?? '').delete();
+          break;
+        case PhotoType.folder:
+          await Directory(data.path ?? '').delete(recursive: true);
+          // Directory(data.path??'').deleteSync(recursive: true);
+          break;
+      }
+    } catch (err) {
+      emit(PhotoError(err.toString()));
+    }
+  }
+
+  Future<void> onUpdatePhoto(int index, XFile file, String name) async {
+    try {
+      await _updateAndMoveFile(index, file, file.name);
+      emit(PhotoLogged(data: _getPhotoStorage()));
+    } catch (err) {
+      emit(PhotoError(err.toString()));
+    }
+  }
+
+  Future<void> createFolder(String? name) async {
+    final directory = await getApplicationDocumentsDirectory();
+    await Directory('${directory.path}/$name/').create();
+    box.add(PhotoModel(
+      name: name,
+      type: PhotoType.folder.type,
+      date: DateTime.now(),
+      path: '${directory.path}/$name',
+    ));
+    emit(PhotoLogged(data: _getPhotoStorage()));
+  }
+
+  Future<void> uploadPhoto(List<XFile> files) async {
+    await _addAndMoveFile(files);
+    emit(PhotoLogged(data: _getPhotoStorage()));
+  }
+
+  List<PhotoModel> _getPhotoStorage() {
+    Map<dynamic, dynamic> photoLocal = box.toMap();
+    List<PhotoModel> data = List.from([]);
+    for (var element in photoLocal.entries) {
+      data.add(element.value as PhotoModel);
+    }
+    return data;
+  }
+
+  Future<void> _addAndMoveFile(List<XFile> files) async {
+    for (var e in files) {
       final directory = await getApplicationDocumentsDirectory();
       var path = directory.path;
-      await moveFile(File(e.path), '$path/${e.name}');
+      await Utility.moveFile(File(e.path), '$path/${e.name}');
       box.add(PhotoModel(
         name: e.name,
         date: DateTime.now(),
         path: '$path/${e.name}',
       ));
-    }).toList();
+    }
   }
 
-  Future<File> moveFile(File originalFile, String targetPath) async {
-    try {
-      // This will try first to just rename the file if they are on the same directory,
-      return await originalFile.rename(targetPath);
-    } on FileSystemException catch (e) {
-      // if the rename method fails, it will copy the original file to the new directory and then delete the original file
-      final newFileInTargetPath = await originalFile.copy(targetPath);
-      await originalFile.delete();
-      return newFileInTargetPath;
-    }
+  Future<void> _updateAndMoveFile(int index, XFile file, String name) async {
+    final directory = await getApplicationDocumentsDirectory();
+    var path = directory.path;
+    await Utility.moveFile(File(file.path), '$path/$name');
+    box.putAt(
+        index,
+        PhotoModel(
+          name: name,
+          date: DateTime.now(),
+          path: '$path/$name',
+        ));
   }
 }

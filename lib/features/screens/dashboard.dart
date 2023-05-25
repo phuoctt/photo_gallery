@@ -3,13 +3,19 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:photo_gallery/bloc/photo/photo_state.dart';
+import 'package:photo_gallery/models/photo.dart';
 
 import '../../bloc/photo/photo_cubit.dart';
+import '../views/create_popup.dart';
+import '../views/fab_menu_option.dart';
+import '../views/photo_grid.dart';
 
 class DashBoardScreen extends StatefulWidget {
-  const DashBoardScreen({Key? key}) : super(key: key);
+  static const route = '/dashboard';
+  final PhotoModel? data;
+
+  const DashBoardScreen({Key? key, this.data}) : super(key: key);
 
   @override
   State<DashBoardScreen> createState() => _DashBoardScreenState();
@@ -17,8 +23,6 @@ class DashBoardScreen extends StatefulWidget {
 
 class _DashBoardScreenState extends State<DashBoardScreen> {
   PhotoCubit get photoCubit => BlocProvider.of<PhotoCubit>(context);
-
-  List<File> data = List.from([]);
 
   @override
   void initState() {
@@ -32,55 +36,48 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: Text('dá'),
+          title: Text(widget.data?.name ?? 'Photo Gallery'),
+          actions: [
+            IconButton(onPressed: () {}, icon: const Icon(Icons.search))
+          ],
         ),
-        body: BlocBuilder<PhotoCubit, PhotoState>(builder: (context, state) {
-          if (state is PhotoLogged) {
-            final data  = state.data;
-            return GridView.builder(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10,
-                ),
-                itemCount: data.length,
-                itemBuilder: (BuildContext context, int index) {
-                  final map = data.entries.toList()[index];
-                  final photo = map.value;
-                  return Image.file(
-                    File(photo.path??''),
-                    fit: BoxFit.cover,
-                  );
-                });
-          }
-          return const Center(child: CircularProgressIndicator());
-        }),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () async {
-            pickImage();
-            // final XFile? image =
-            //     await ImagePicker().pickImage(source: ImageSource.gallery);
-            print('object');
-            //
-            // final directory = await getApplicationDocumentsDirectory();
-            //
-            // var path = directory.path;
-            // final file = await moveFile(
-            //     File(
-            //       image?.path ?? '',
-            //     ),
-            //     '$path/hinha');
-            // setState(() {
-            //   data.add(file);
-            // });
-          },
-          child: const Icon(Icons.add),
+        body: BlocBuilder<PhotoCubit, PhotoState>(
+            buildWhen: (p, c) => c is PhotoLogged,
+            builder: (context, state) {
+              if (state is PhotoLogged) {
+                final data = state.data;
+                return PhotoGridView(data: data);
+              }
+              return const Center(child: CircularProgressIndicator());
+            }),
+        floatingActionButton: ExpandableFab(
+          distance: 60,
+          children: [
+            ActionButton(
+              onPressed: () async {
+                final result = await CreatePopup.show();
+                if (result != null) {
+                  photoCubit.createFolder(result);
+                }
+              },
+              icon: const Icon(
+                Icons.folder,
+                color: Colors.white,
+              ),
+            ),
+            ActionButton(
+              onPressed: pickImage,
+              icon: const Icon(
+                Icons.upload,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ));
   }
 
   Future<void> pickImage() async {
-    photoCubit.addPhoto(await ImagePicker().pickMultiImage());
+    final files = await ImagePicker().pickMultiImage(imageQuality: 30);
+    photoCubit.addPhoto(files);
   }
 }

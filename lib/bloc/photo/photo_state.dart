@@ -9,7 +9,7 @@ class PhotoLoading extends PhotoState {
 }
 
 class PhotoLogged extends PhotoState {
-  final Map<int, PhotoModel> data;
+  final List<PhotoModel> data;
 
   const PhotoLogged({required this.data});
 }

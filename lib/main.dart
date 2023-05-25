@@ -2,36 +2,40 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:photo_gallery/route/navigator.dart';
+import 'package:photo_gallery/route/routes.dart';
+import 'app.dart';
 import 'bloc/photo/photo_cubit.dart';
 import 'features/screens/dashboard.dart';
 import 'models/photo.dart';
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final directory = await getApplicationDocumentsDirectory();
-  var path = directory.path;
-  Hive
-    ..init(path)
-    ..registerAdapter(PhotoAdapter());
+  final app = App();
+  await app.setup();
   runApp(
     MultiBlocProvider(
       providers: [
         BlocProvider<PhotoCubit>.value(value: PhotoCubit()),
       ],
-      child: const MyApp(),
+      child: MyApp(app: app),
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final App app;
+
+  const MyApp({Key? key, required this.app}) : super(key: key);
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
+      navigatorKey: navigatorKey,
+      onGenerateRoute: routes(app),
+      navigatorObservers: [routeObserver],
       theme: ThemeData(
         // This is the theme of your application.
         //
