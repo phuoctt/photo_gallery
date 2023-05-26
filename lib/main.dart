@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:photo_gallery/features/widgets/icon_change_list.dart';
 import 'package:photo_gallery/route/navigator.dart';
 import 'package:photo_gallery/route/routes.dart';
 import 'app.dart';
+import 'bloc/app/app_cubit.dart';
+import 'bloc/app/app_state.dart';
 import 'bloc/photo/photo_cubit.dart';
 import 'features/screens/dashboard.dart';
 import 'models/photo.dart';
@@ -17,6 +20,7 @@ void main() async {
     MultiBlocProvider(
       providers: [
         BlocProvider<PhotoCubit>.value(value: PhotoCubit()),
+        BlocProvider<AppCubit>.value(value: AppCubit(app.userLocalStorage)),
       ],
       child: MyApp(app: app),
     ),
@@ -37,17 +41,11 @@ class MyApp extends StatelessWidget {
       onGenerateRoute: routes(app),
       navigatorObservers: [routeObserver],
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
-      ),
+          primarySwatch: Colors.green,
+          primaryColor: const Color(0xff3A506B),
+          appBarTheme: const AppBarTheme(color: Color(0xff3A506B)),
+          floatingActionButtonTheme: const FloatingActionButtonThemeData(
+              backgroundColor: Color(0xff3A506B))),
       home: const DashBoardScreen(),
     );
   }

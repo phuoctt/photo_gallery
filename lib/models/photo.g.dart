@@ -18,9 +18,10 @@ class PhotoModelAdapter extends TypeAdapter<PhotoModel> {
     };
     return PhotoModel(
       name: fields[0] as String?,
-      date: fields[1] as DateTime?,
+      createDate: fields[1] as DateTime?,
       path: fields[2] as String?,
       type: fields[3] as int?,
+      updateDate: fields[5] as DateTime?,
       photoChild: (fields[4] as List?)?.cast<PhotoModel>(),
     );
   }
@@ -28,17 +29,19 @@ class PhotoModelAdapter extends TypeAdapter<PhotoModel> {
   @override
   void write(BinaryWriter writer, PhotoModel obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(6)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
-      ..write(obj.date)
+      ..write(obj.createDate)
       ..writeByte(2)
       ..write(obj.path)
       ..writeByte(3)
       ..write(obj.type)
       ..writeByte(4)
-      ..write(obj.photoChild);
+      ..write(obj.photoChild)
+      ..writeByte(5)
+      ..write(obj.updateDate);
   }
 
   @override

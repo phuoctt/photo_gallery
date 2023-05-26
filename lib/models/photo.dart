@@ -6,9 +6,10 @@ part 'photo.g.dart';
 class PhotoModel {
   PhotoModel({
     required this.name,
-    required this.date,
+    required this.createDate,
     required this.path,
     this.type = 1,
+    this.updateDate,
     this.photoChild,
   });
 
@@ -16,7 +17,7 @@ class PhotoModel {
   String? name;
 
   @HiveField(1)
-  DateTime? date;
+  DateTime? createDate;
 
   @HiveField(2)
   String? path;
@@ -27,30 +28,21 @@ class PhotoModel {
   @HiveField(4)
   List<PhotoModel>? photoChild;
 
-  PhotoModel.fromJson(Map<String, dynamic> json) {
-    name = json['name'];
-    date = json['date'];
-    path = json['path'];
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['name'] = name;
-    data['email'] = date;
-    data['path'] = path;
-    return data;
-  }
+  @HiveField(5)
+  DateTime? updateDate;
 
   PhotoModel copyWith({
     String? name,
     DateTime? date,
+    DateTime? dateUpdate,
     String? path,
     int? type,
     List<PhotoModel>? photoChild,
   }) {
     return PhotoModel(
       name: name ?? this.name,
-      date: date ?? this.date,
+      createDate: date ?? this.createDate,
+      updateDate: dateUpdate ?? this.updateDate,
       path: path ?? this.path,
       type: type ?? this.type,
       photoChild: photoChild ?? this.photoChild,

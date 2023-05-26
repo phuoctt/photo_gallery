@@ -55,9 +55,9 @@ class PhotoCubit extends Cubit<PhotoState> {
     }
   }
 
-  Future<void> onUpdatePhoto(int index, XFile file, String name) async {
+  Future<void> onUpdatePhoto(int index, XFile file, PhotoModel photo) async {
     try {
-      await _updateAndMoveFile(index, file, file.name);
+      await _updateAndMoveFile(index, file, photo);
       emit(PhotoLogged(data: _getPhotoStorage()));
     } catch (err) {
       emit(PhotoError(err.toString()));
@@ -70,7 +70,8 @@ class PhotoCubit extends Cubit<PhotoState> {
     box.add(PhotoModel(
       name: name,
       type: PhotoType.folder.type,
-      date: DateTime.now(),
+      createDate: DateTime.now(),
+      updateDate: DateTime.now(),
       path: '${directory.path}/$name',
     ));
     emit(PhotoLogged(data: _getPhotoStorage()));
@@ -97,22 +98,26 @@ class PhotoCubit extends Cubit<PhotoState> {
       await Utility.moveFile(File(e.path), '$path/${e.name}');
       box.add(PhotoModel(
         name: e.name,
-        date: DateTime.now(),
+        createDate: DateTime.now(),
+        updateDate: DateTime.now(),
         path: '$path/${e.name}',
       ));
     }
   }
 
-  Future<void> _updateAndMoveFile(int index, XFile file, String name) async {
+  Future<void> _updateAndMoveFile(
+      int index, XFile file, PhotoModel photo) async {
     final directory = await getApplicationDocumentsDirectory();
     var path = directory.path;
-    await Utility.moveFile(File(file.path), '$path/$name');
+    await Utility.moveFile(File(file.path), '$path/${file.name}');
     box.putAt(
-        index,
-        PhotoModel(
-          name: name,
-          date: DateTime.now(),
-          path: '$path/$name',
-        ));
+      index,
+      photo.copyWith(path: '$path/${file.name}', dateUpdate: DateTime.now()),
+      // PhotoModel(
+      //   name: photo.name,
+      //   createDate: DateTime.now(),
+      //   path: '$path/${file.name}',
+      // )
+    );
   }
 }

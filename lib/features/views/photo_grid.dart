@@ -6,21 +6,19 @@ import 'package:photo_gallery/route/navigator.dart';
 import 'package:photo_gallery/share/enums/photo_type.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../bloc/app/app_cubit.dart';
 import '../../bloc/photo/photo_cubit.dart';
 import '../../models/photo.dart';
-import '../screens/photo_manager.dart';
 import '../screens/photo_view.dart';
+import '../widgets/icon_change_list.dart';
 import '../widgets/item_photo.dart';
-import 'create_popup.dart';
 
 class PhotoGridView extends StatefulWidget {
   final List<PhotoModel> data;
-  final PopupMenuItemSelected<MenuPhoto>? onChanged;
 
   const PhotoGridView({
     Key? key,
     required this.data,
-    this.onChanged,
   }) : super(key: key);
 
   @override
@@ -32,58 +30,76 @@ class _PhotoGridViewState extends State<PhotoGridView> {
 
   @override
   Widget build(BuildContext context) {
+    final modeView =
+        BlocProvider.of<AppCubit>(context).state.mode ?? ListModeType.grid_view;
     return widget.data.isEmpty
         ? noDataWidget()
         : Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: _buildPhotoView(),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              transitionBuilder: (child, animation) {
+                return SlideTransition(
+                    position: animation.drive(Tween(
+                        begin: const Offset(1.0, 0.0),
+                        end: const Offset(0.0, 0.0))),
+                    child: child);
+              },
+              child: modeView == ListModeType.grid_view
+                  ? _buildPhotoGridView()
+                  : _buildPhotoListView(),
+            ),
           );
   }
 
-  Widget _buildPhotoView() {
-    return Column(
-      children: [
-        TextField(
-          decoration: InputDecoration(
-            prefixIcon: Icon(Icons.search),
-            border: OutlineInputBorder(),
-            hintText: 'Search',
-          ),
+  Widget _buildPhotoGridView() {
+    return GridView.builder(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
+          childAspectRatio: MediaQuery.of(context).size.width /
+              (MediaQuery.of(context).size.height / 2),
         ),
-        Expanded(
-          child: GridView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-              ),
-              itemCount: widget.data.length,
-              itemBuilder: (BuildContext context, int index) {
-                final item = widget.data[index];
-                return GestureDetector(
-                  onTap: () => _onTapPhoto(item),
-                  child: PhotoItem(
-                    data: item,
-                    onChanged: (menu) {
-                      switch (menu) {
-                        case MenuPhoto.delete:
-                          BlocProvider.of<PhotoCubit>(context)
-                              .onDelete(index, item);
-                          break;
-                        case MenuPhoto.edit:
-                          _cropImage(context, index, item);
-                          break;
-                        case MenuPhoto.share:
-                          Share.shareFiles([item.path ?? '']);
-                          break;
-                      }
-                    },
-                  ),
-                );
-              }),
-        ),
-      ],
+        itemCount: widget.data.length,
+        itemBuilder: (BuildContext context, int index) {
+          final item = widget.data[index];
+          return _buildItemPhoto(index, item);
+        });
+  }
+
+  Widget _buildPhotoListView() {
+    return ListView.separated(
+        itemBuilder: (_, index) {
+          final item = widget.data[index];
+          return _buildItemPhoto(index, item);
+        },
+        separatorBuilder: (_, index) {
+          return const SizedBox(height: 16);
+        },
+        itemCount: widget.data.length);
+  }
+
+  Widget _buildItemPhoto(int index, PhotoModel item) {
+    return GestureDetector(
+      onTap: () => _onTapPhoto(item),
+      child: PhotoItem(
+        data: item,
+        onChanged: (menu) {
+          switch (menu) {
+            case MenuPhoto.delete:
+              BlocProvider.of<PhotoCubit>(context).onDelete(index, item);
+              break;
+            case MenuPhoto.edit:
+              _cropImage(context, index, item);
+              break;
+            case MenuPhoto.share:
+              Share.shareFiles([item.path ?? '']);
+              break;
+          }
+        },
+      ),
     );
   }
 
@@ -116,8 +132,7 @@ class _PhotoGridViewState extends State<PhotoGridView> {
         ],
       );
       if (croppedFile != null) {
-        photoCubit.onUpdatePhoto(
-            index, XFile(croppedFile.path), photo.name ?? '');
+        photoCubit.onUpdatePhoto(index, XFile(croppedFile.path), photo);
       }
     }
   }

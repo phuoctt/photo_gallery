@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
+import 'package:photo_gallery/share/extensions/date_time.dart';
 
 import '../../models/photo.dart';
 import '../../share/utility.dart';
@@ -28,8 +29,10 @@ class InfoPhotoScreen extends StatelessWidget {
           separatorBuilder: () => const Divider(),
           children: [
             _buildContentWidget('Name', photo.name),
-            _buildContentWidget('Create date',
-                DateFormat.yMMMd().format(photo.date ?? DateTime.now())),
+            _buildContentWidget(
+                'Create date', photo.createDate.toDate('HH:mm dd MMM yyy')),
+            _buildContentWidget(
+                'Update date', photo.updateDate.toDate('HH:mm dd MMM yyy')),
             _buildContentWidget(
                 'Size',
                 Utility.getFileSizeString(
