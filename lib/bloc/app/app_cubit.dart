@@ -17,7 +17,7 @@ class AppCubit extends Cubit<AppState> {
   }
 
   void onUpdateMode(ListModeType mode) {
-    storage.updateTheme(mode);
+    storage.updateViewMode(mode);
     emit(AppState(mode: mode));
   }
 }

@@ -1,24 +1,23 @@
-import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../features/widgets/icon_change_list.dart';
 
 class UserLocalStorage {
-  static const String modeKey = 'theme_key';
+  static const String modeKey = 'mode_view_key';
 
   late SharedPreferences _storage;
 
   Future<void> load() async {
     _storage = await SharedPreferences.getInstance();
-    await loadTheme();
+    await loadViewMore();
   }
 
-  loadTheme() async {
+  loadViewMore() async {
     _viewMode =
         _storage.getString(modeKey) ?? ListModeType.grid_view.toString();
   }
 
-  updateTheme(ListModeType mode) {
+  updateViewMode(ListModeType mode) {
     _scheduleSave(
         modeKey,
         mode == ListModeType.grid_view
@@ -29,7 +28,7 @@ class UserLocalStorage {
   ListModeType get modeView => _getViewMode();
   String _viewMode = "";
 
-  set themeMode(String value) {
+  set viewMode(String value) {
     _viewMode = value;
     _scheduleSave(modeKey, value);
   }

@@ -10,7 +10,7 @@ import '../../bloc/app/app_cubit.dart';
 import '../../resources/paths.dart';
 import 'icon_change_list.dart';
 
-enum MenuPhoto { edit, delete, share }
+enum MenuPhoto { edit, delete, share, rename }
 
 class PhotoItem extends StatelessWidget {
   final PhotoModel data;
@@ -104,7 +104,7 @@ class PhotoItem extends StatelessWidget {
               maxLines: 1,
               style: const TextStyle(fontSize: 15),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 8),
             Text(
               'Modified ${DateFormat.yMMMd().format(data.createDate ?? DateTime.now())}',
               style: const TextStyle(fontSize: 12),
@@ -135,6 +135,10 @@ class PhotoItem extends StatelessWidget {
       const PopupMenuItem<MenuPhoto>(
         value: MenuPhoto.delete,
         child: Text('Delete'),
+      ),
+      const PopupMenuItem<MenuPhoto>(
+        value: MenuPhoto.rename,
+        child: Text('Rename'),
       ),
     ];
     if (type == PhotoType.file) {

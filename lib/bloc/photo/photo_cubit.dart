@@ -64,6 +64,15 @@ class PhotoCubit extends Cubit<PhotoState> {
     }
   }
 
+  Future<void> onRename(int index, PhotoModel photo) async {
+    try {
+      box.putAt(index, photo);
+      emit(PhotoLogged(data: _getPhotoStorage()));
+    } catch (err) {
+      emit(PhotoError(err.toString()));
+    }
+  }
+
   Future<void> createFolder(String? name) async {
     final directory = await getApplicationDocumentsDirectory();
     await Directory('${directory.path}/$name/').create();
@@ -72,7 +81,7 @@ class PhotoCubit extends Cubit<PhotoState> {
       type: PhotoType.folder.type,
       createDate: DateTime.now(),
       updateDate: DateTime.now(),
-      path: '${directory.path}/$name',
+      path: '${directory.path}/${name?.trim()}',
     ));
     emit(PhotoLogged(data: _getPhotoStorage()));
   }

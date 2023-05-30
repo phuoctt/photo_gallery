@@ -1,9 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:photo_gallery/models/photo.dart';
 import 'dart:async';
 
 import '../../bloc/app/app_cubit.dart';
+import '../../share/enums/filter_type.dart';
+import '../views/filter_popup.dart';
 import '../views/photo_grid.dart';
 import '../widgets/unfocus.dart';
 
@@ -24,6 +28,8 @@ class _SearchPhotoScreenState extends State<SearchPhotoScreen> {
   late List<PhotoModel> _data;
   late List<PhotoModel> _resultSearch;
   Timer? _debounce;
+  FilterType? _value;
+  TextEditingController _controller = TextEditingController();
 
   @override
   void initState() {
@@ -44,6 +50,18 @@ class _SearchPhotoScreenState extends State<SearchPhotoScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: _searchBar(),
+          actions: [
+            IconButton(
+                onPressed: () {
+                  FilterPopup.show(initValue: _value).then((value) {
+                    if (value != null) {
+                      _value = value;
+                      _onFilter();
+                    }
+                  });
+                },
+                icon: Icon(Icons.filter_alt))
+          ],
         ),
         body: PhotoGridView(data: _resultSearch),
       ),
@@ -54,8 +72,9 @@ class _SearchPhotoScreenState extends State<SearchPhotoScreen> {
     return SizedBox(
         height: 40,
         child: TextField(
+            controller: _controller,
             autocorrect: true,
-            onChanged: _onSearchChanged,
+            onChanged: (_) => _onSearchChanged(),
             decoration: const InputDecoration(
               hintText: 'Search',
               hintStyle: TextStyle(color: Colors.grey),
@@ -73,15 +92,38 @@ class _SearchPhotoScreenState extends State<SearchPhotoScreen> {
             )));
   }
 
-  _onSearchChanged(String query) {
+  void _onSearchChanged() {
     if (_debounce?.isActive ?? false) _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 500), () {
-      setState(() {
-        _resultSearch = List.from(_data
-            .where((element) =>
-                element.name?.toLowerCase().contains(query) == true)
-            .toList());
-      });
+    _debounce = Timer(const Duration(milliseconds: 500), () => _onFilter());
+  }
+
+  void _onFilter() {
+    setState(() {
+      _resultSearch = List.from(_data
+          .where((element) =>
+              element.name?.toLowerCase().contains(_controller.text) == true)
+          .toList());
+      if (_value == null) return;
+      switch (_value) {
+        case FilterType.name:
+          _resultSearch.sort((a, b) => (a.name ?? '')
+              .toLowerCase()
+              .compareTo((b.name ?? '').toLowerCase()));
+          break;
+        case FilterType.createdDate:
+          _resultSearch.sort((a, b) => (a.createDate ?? DateTime.now())
+              .compareTo((b.createDate ?? DateTime.now())));
+          break;
+        case FilterType.updateDate:
+          _resultSearch.sort((a, b) => (a.updateDate ?? DateTime.now())
+              .compareTo((b.updateDate ?? DateTime.now())));
+          break;
+        case FilterType.size:
+          _resultSearch.sort((a, b) => File(a.path ?? '')
+              .lengthSync()
+              .compareTo(File(b.path ?? '').lengthSync()));
+          break;
+      }
     });
   }
 }

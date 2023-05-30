@@ -12,6 +12,7 @@ import '../../models/photo.dart';
 import '../screens/photo_view.dart';
 import '../widgets/icon_change_list.dart';
 import '../widgets/item_photo.dart';
+import 'create_popup.dart';
 
 class PhotoGridView extends StatefulWidget {
   final List<PhotoModel> data;
@@ -86,7 +87,7 @@ class _PhotoGridViewState extends State<PhotoGridView> {
       onTap: () => _onTapPhoto(item),
       child: PhotoItem(
         data: item,
-        onChanged: (menu) {
+        onChanged: (menu) async {
           switch (menu) {
             case MenuPhoto.delete:
               BlocProvider.of<PhotoCubit>(context).onDelete(index, item);
@@ -96,6 +97,13 @@ class _PhotoGridViewState extends State<PhotoGridView> {
               break;
             case MenuPhoto.share:
               Share.shareFiles([item.path ?? '']);
+              break;
+            case MenuPhoto.rename:
+              final result =
+                  await CreatePopup.show(title: 'Rename', content: item.name);
+              if (result != null) {
+                photoCubit.onRename(index, item.copyWith(name: result));
+              }
               break;
           }
         },

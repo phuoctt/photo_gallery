@@ -41,7 +41,7 @@ class MyApp extends StatelessWidget {
       onGenerateRoute: routes(app),
       navigatorObservers: [routeObserver],
       theme: ThemeData(
-          primarySwatch: Colors.green,
+          primarySwatch: Colors.blue,
           primaryColor: const Color(0xff3A506B),
           appBarTheme: const AppBarTheme(color: Color(0xff3A506B)),
           floatingActionButtonTheme: const FloatingActionButtonThemeData(
