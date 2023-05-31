@@ -1,16 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hive/hive.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:photo_gallery/features/widgets/icon_change_list.dart';
 import 'package:photo_gallery/route/navigator.dart';
 import 'package:photo_gallery/route/routes.dart';
 import 'app.dart';
 import 'bloc/app/app_cubit.dart';
-import 'bloc/app/app_state.dart';
 import 'bloc/photo/photo_cubit.dart';
 import 'features/screens/dashboard.dart';
-import 'models/photo.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,11 +36,12 @@ class MyApp extends StatelessWidget {
       onGenerateRoute: routes(app),
       navigatorObservers: [routeObserver],
       theme: ThemeData(
-          primarySwatch: Colors.blue,
-          primaryColor: const Color(0xff3A506B),
-          appBarTheme: const AppBarTheme(color: Color(0xff3A506B)),
-          floatingActionButtonTheme: const FloatingActionButtonThemeData(
-              backgroundColor: Color(0xff3A506B))),
+        primarySwatch: Colors.blue,
+        primaryColor: const Color(0xff3A506B),
+        appBarTheme: const AppBarTheme(color: Color(0xff3A506B)),
+        floatingActionButtonTheme: const FloatingActionButtonThemeData(
+            backgroundColor: Color(0xff3A506B)),
+      ),
       home: const DashBoardScreen(),
     );
   }

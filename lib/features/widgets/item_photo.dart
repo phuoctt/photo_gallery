@@ -43,7 +43,7 @@ class PhotoItem extends StatelessWidget {
               child: data.type == PhotoType.file.type
                   ? Image.file(
                       File(data.path ?? ''),
-                      fit: BoxFit.fill,
+                      fit: BoxFit.cover,
                     )
                   : Image.asset(
                       Images.icon_folder,
